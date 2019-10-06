@@ -8,6 +8,9 @@ const ui = {
     newState: <HTMLInputElement> document.getElementById("new-state"),
     tape: <HTMLDivElement> document.getElementById("tape"),
     state: <HTMLDivElement> document.getElementById("state"),
+    inputs: <HTMLTextAreaElement> document.getElementById("inputs"),
+    runInputs: <HTMLInputElement> document.getElementById("run-inputs"),
+    results: <HTMLDivElement> document.getElementById("results"),
     templates: {
         transition: <HTMLTemplateElement> document.getElementById("transition-t"),
         state: <HTMLTemplateElement> document.getElementById("state-t")
@@ -171,14 +174,19 @@ function updateTape(head: number = machine.head) {
     ui.tape.children[head].classList.add("head")
 }
 
-function editTape() {
-    const res = window.prompt("Input tape contents", machine.tape.join(""))
+function makeTape(input: string) {
     const alph = new Set(alphabet)
-    const tape = Array.from(res).filter(s => alph.has(s))
+    const tape = Array.from(input)
+        .filter(s => alph.has(s))
     if(tape[tape.length - 1] !== Blank) {
         tape.push(Blank)
     }
-    machine.tape = tape
+    return tape
+}
+
+function editTape() {
+    const res = window.prompt("Input tape contents", machine.tape.join(""))
+    machine.tape = makeTape(res)
     updateTape()
 }
 
@@ -213,3 +221,26 @@ ui.control.run.onclick = run
 ui.control.stop.onclick = stop
 ui.control.edit.onclick = editTape
 ui.control.reset.onclick = resetMachine
+
+ui.runInputs.onclick = () => {
+    const inputs = ui.inputs.value
+        .split("\n")
+    ui.results.innerHTML = ""
+    inputs.forEach(i => {
+        const tape = makeTape(i)
+        const m = new Machine(alphabet)
+        m.states = machine.states
+        m.tape = tape
+        let steps = 0
+        while(!m.isHalted() && steps < 1000) {
+            m.step()
+            steps++
+        }
+        const result = document.createElement("div")
+        const res = m.isHalted() ?
+            { y: "accepted", n: "rejected" }[<"y"|"n"> m.state] :
+            "timed-out"
+        result.textContent = `${i} - ${res}`
+        ui.results.appendChild(result)
+    })
+}

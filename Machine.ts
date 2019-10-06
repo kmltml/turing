@@ -48,4 +48,8 @@ class Machine {
         this.head = 0
     }
 
+    isHalted() {
+        return typeof this.state !== "number"
+    }
+
 }
