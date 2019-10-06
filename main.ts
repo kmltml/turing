@@ -1,26 +1,6 @@
-type Sym = string
-
-type State = {
-    name: string,
-    transitions: TransitionMap
-}
-
-type StateId = number | "y" | "n"
-
-type Direction = "l" | "r"
-
-type Transition = {
-    write: Sym,
-    direction: Direction,
-    next: StateId
-}
-
-type TransitionMap = { [symbol: string]: Transition }
-
-const Blank = "\u25A1"
-
 let alphabet: string[] = []
-let states: State[] = []
+
+let machine = new Machine(alphabet)
 
 const ui = {
     alphabet: <HTMLInputElement> document.getElementById("alphabet"),
@@ -81,22 +61,22 @@ function updateTransitionCell(cell: HTMLElement, transition?: Transition) {
     }
     const next = <HTMLSelectElement> cell.getElementsByClassName("next")[0]
     const nextv = transition !== undefined ? transition.next.toString() : next.value
-    while (next.children.length > states.length + 2) {
+    while (next.children.length > machine.states.length + 2) {
         next.removeChild(next.lastChild)
     }
-    while (next.children.length < states.length + 2) {
+    while (next.children.length < machine.states.length + 2) {
         const option = document.createElement("option")
         next.appendChild(option)
     }
-    states.forEach((s, i) => {
+    machine.states.forEach((s, i) => {
         const option = <HTMLOptionElement> next.children[i]
         option.textContent = s.name
         option.value = i.toString()
     })
-    next.children[states.length].textContent = "yes"
-    ;(<HTMLOptionElement> next.children[states.length]).value = "y"
-    next.children[states.length + 1].textContent = "no"
-    ;(<HTMLOptionElement> next.children[states.length + 1]).value = "n"
+    next.children[machine.states.length].textContent = "yes"
+    ;(<HTMLOptionElement> next.children[machine.states.length]).value = "y"
+    next.children[machine.states.length + 1].textContent = "no"
+    ;(<HTMLOptionElement> next.children[machine.states.length + 1]).value = "n"
     next.value = nextv
 }
 
@@ -136,7 +116,7 @@ function createStateRow(): [State, Element] {
         transitions[s] = trans
     })
     const state = {
-        name: `state${states.length}`,
+        name: `state${machine.states.length}`,
         transitions
     }
     const name = <HTMLInputElement> row.getElementsByClassName("state-name")[0]
@@ -156,48 +136,27 @@ function updateTransitions() {
 ui.newState.onclick = e => {
     const [state, row] = createStateRow()
     ui.transitions.appendChild(row)
-    states.push(state)
+    machine.states.push(state)
     updateTransitions()
 }
 
-let machineState = {
-    state: <StateId> 0,
-    head: 0
-}
-
-let tape: Sym[] = []
-
-function readTape(head?: number) {
-    if (head === undefined) {
-        head = machineState.head
-    }
-    const v = tape[head]
-    return v === undefined ? Blank : v
-}
-
 function updateState() {
-    if (typeof machineState.state === "number") {
-        ui.state.textContent = states[machineState.state].name
+    if (typeof machine.state === "number") {
+        ui.state.textContent = machine.states[machine.state].name
     } else {
-        ui.state.textContent = { y: "yes", n: "no" }[machineState.state]
+        ui.state.textContent = { y: "yes", n: "no" }[machine.state]
     }
 }
 
 function step() {
-    if (typeof machineState.state === "number") {
-        const sym = readTape()
-        const trans = states[machineState.state].transitions[sym]
-        tape[machineState.head] = trans.write
-        machineState.head += trans.direction === "l" ? -1 : 1
-        machineState.state = trans.next
-        updateTape()
-        updateState()
-    }
+    machine.step()
+    updateTape()
+    updateState()
 }
 
-function updateTape(head: number = machineState.head) {
-    const tapeLength = Math.max(head + 1, tape.length)
-    while (ui.tape.children.length > tape.length) {
+function updateTape(head: number = machine.head) {
+    const tapeLength = Math.max(head + 1, machine.tape.length)
+    while (ui.tape.children.length > tapeLength) {
         ui.tape.removeChild(ui.tape.lastChild)
     }
     while (ui.tape.children.length < tapeLength) {
@@ -205,7 +164,7 @@ function updateTape(head: number = machineState.head) {
         ui.tape.appendChild(div)
     }
     for (let i = 0; i < tapeLength; i++) {
-        ui.tape.children[i].textContent = readTape(i)
+        ui.tape.children[i].textContent = machine.readTape(i)
     }
     Array.from(ui.tape.getElementsByClassName("head"))
         .forEach(e => e.classList.remove("head"))
@@ -213,23 +172,23 @@ function updateTape(head: number = machineState.head) {
 }
 
 function editTape() {
-    const res = window.prompt("Input tape contents", tape.join(""))
+    const res = window.prompt("Input tape contents", machine.tape.join(""))
     const alph = new Set(alphabet)
-    tape = Array.from(res).filter(s => alph.has(s))
+    const tape = Array.from(res).filter(s => alph.has(s))
     if(tape[tape.length - 1] !== Blank) {
         tape.push(Blank)
     }
+    machine.tape = tape
     updateTape()
 }
 
 function resetMachine() {
-    machineState.state = 0
-    machineState.head = 0
+    machine.reset()
     updateTape()
     updateState()
 }
 
-let runTimer?: number = undefined
+let runTimer: number = undefined
 
 function stop() {
     if(runTimer !== undefined) {
