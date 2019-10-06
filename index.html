@@ -1,0 +1,85 @@
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <style>
+      select {
+          border: 0;
+          -moz-appearance: none;
+      }
+      #container {
+          display: flex;
+          flex-direction: row;
+      }
+      #definition {
+          flex-grow: 0;
+          flex-shrink: 0;
+          margin-right: 1em;
+      }
+      #tape {
+          display: flex;
+          flex-wrap: wrap;
+      }
+      #tape > div {
+          border: black solid 1px;
+          box-sizing: border-box;
+          width: 32px;
+          height: 32px;
+      }
+      #tape > div.head {
+          border: red solid 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <template id="transition-t">
+      <td class="transition">
+        <select class="write"></select>
+        <select class="dir">
+          <option value="l">←</option>
+          <option value="r">→</option>
+        </select>
+        <select class="next"></select>
+      </td>
+    </template>
+    <template id="state-t">
+      <tr>
+        <td><input class="state-name" type="text"/></td>
+      </tr>
+    </template>
+    <div id="container">
+      <div id="definition">
+        <label for="alphabet">Alphabet</label>
+        <input id="alphabet" type="text" value="01"/>
+        <table id="transitions">
+          <thead>
+            <tr><th>state</th></tr>
+          </thead>
+        </table>
+        <input id="new-state" type="button" value="+"/>
+      </div>
+      <div id="operation">
+        <div id="state">state0</div>
+        <div id="tape">
+          <div>1</div>
+          <div>2</div>
+          <div>3</div>
+          <div>4</div>
+          <div class="head">5</div>
+          <div>6</div>
+          <div>7</div>
+          <div>8</div>
+          <div>9</div>
+          <div>10</div>
+        </div>
+        <div id="controls">
+          <input id="ctl-step" type="button" value="step"/>
+          <input id="ctl-run" type="button" value="run"/>
+          <input id="ctl-stop" type="button" value="stop" disabled="true"/>
+          <input id="ctl-edit" type="button" value="edit"/>
+          <input id="ctl-reset" type="button" value="reset"/>
+        </div>
+      </div>
+    </div>
+    <script src="main.js"></script>
+  </body>
+</html>

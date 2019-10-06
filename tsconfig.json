@@ -1,0 +1,10 @@
+{
+  "include": ["*.ts"],
+  "compilerOptions": {
+    "downlevelIteration": true,
+    "noImplicitAny": true,
+    "lib": [
+      "es2019", "dom"
+    ]
+  }
+}
